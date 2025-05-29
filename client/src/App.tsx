@@ -35,6 +35,7 @@ function Router() {
           <ModernLayout>
             <Switch>
               <Route path="/" component={SuperAdminDashboard} />
+              <Route path="/staff" component={StaffManagement} />
               <Route path="/analytics" component={Analytics} />
               <Route path="/reports" component={Reports} />
               <Route component={NotFound} />
