@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Login from "@/pages/Login";
 import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import StaffManagement from "@/pages/StaffManagement";
+import SponsorsManagement from "@/pages/SponsorsManagement";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import Landing from "@/pages/Landing";
@@ -37,6 +38,7 @@ function Router() {
             <Switch>
               <Route path="/" component={SuperAdminDashboard} />
               <Route path="/staff" component={StaffManagement} />
+              <Route path="/sponsors" component={SponsorsManagement} />
               <Route path="/analytics" component={Analytics} />
               <Route path="/reports" component={Reports} />
               <Route component={NotFound} />
