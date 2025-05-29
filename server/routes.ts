@@ -156,22 +156,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const currentUser = await storage.getUser(req.session.userId);
       if (!currentUser) {
+        console.error("Current user not found for session:", req.session.userId);
         return res.status(401).json({ message: "Unauthorized" });
       }
+
+      console.log("Current user role:", currentUser.role, "Attempting to create user with role:", req.body.role);
 
       // Role-based access control
       const { role: newUserRole } = req.body;
       if (currentUser.role === userRoles.SUPER_ADMIN) {
         // Super admin can create APP_STAFF and SPONSORS
         if (![userRoles.APP_STAFF, userRoles.SPONSOR].includes(newUserRole)) {
+          console.error("Super admin cannot create role:", newUserRole);
           return res.status(403).json({ message: "Cannot create this user role" });
         }
       } else if (currentUser.role === userRoles.APP_STAFF) {
         // APP Staff can create MERCHANTS
         if (newUserRole !== userRoles.MERCHANT) {
+          console.error("APP Staff cannot create role:", newUserRole);
           return res.status(403).json({ message: "Cannot create this user role" });
         }
       } else {
+        console.error("User role has insufficient permissions:", currentUser.role);
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 

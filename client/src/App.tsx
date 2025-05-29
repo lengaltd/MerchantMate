@@ -9,6 +9,7 @@ import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import StaffManagement from "@/pages/StaffManagement";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
+import Landing from "@/pages/Landing";
 import ModernLayout from "@/components/ModernLayout";
 import NotFound from "@/pages/not-found";
 
