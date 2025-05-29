@@ -28,11 +28,11 @@ export const sessions = pgTable(
 
 // User roles enum
 export const userRoles = {
-  SUPER_ADMIN: 'super_admin',
-  SPONSOR: 'sponsor',
-  APP_STAFF: 'app_staff',
-  MERCHANT: 'merchant',
-  STAFF: 'staff'
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  SPONSOR: 'SPONSOR',
+  APP_STAFF: 'APP_STAFF',
+  MERCHANT: 'MERCHANT',
+  STAFF: 'STAFF'
 } as const;
 
 // Users table (required for Replit Auth)
