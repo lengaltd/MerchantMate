@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User management routes
   app.post('/api/users', isAuthenticated, async (req: any, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.claims.sub);
+      const currentUser = await storage.getUser(req.session.userId);
       if (!currentUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -164,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Business routes
   app.get('/api/business', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       res.json(business);
     } catch (error) {
@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -193,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Product routes
   app.get('/api/products', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/products', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -251,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/products/low-stock', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -268,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customer routes
   app.get('/api/customers', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -284,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/customers', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -327,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sales routes
   app.get('/api/sales', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -343,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/sales', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -380,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Expense routes
   app.get('/api/expenses', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -396,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/expenses', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -429,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
   app.get('/api/categories', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -445,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/categories', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -467,7 +467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics routes
   app.get('/api/analytics/weekly-sales', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const business = await storage.getUserBusiness(userId);
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
