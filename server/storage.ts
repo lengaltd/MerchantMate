@@ -120,7 +120,7 @@ export class DatabaseStorage implements IStorage {
     const existingSuperAdmin = await db
       .select()
       .from(users)
-      .where(eq(users.role, userRoles.SUPER_ADMIN))
+      .where(eq(users.phoneNumber, '+255700000000'))
       .limit(1);
 
     if (existingSuperAdmin.length > 0) {
@@ -134,7 +134,7 @@ export class DatabaseStorage implements IStorage {
         id: 'super-admin-' + Date.now(),
         fullName: 'Super Admin',
         phoneNumber: '+255700000000',
-        password: '12345678', // In production, this should be hashed
+        password: '12345678',
         role: userRoles.SUPER_ADMIN,
         status: 'active',
       })

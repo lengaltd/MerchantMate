@@ -5,16 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import Products from "@/pages/Products";
-import Customers from "@/pages/Customers";
-import Sales from "@/pages/Sales";
-import Expenses from "@/pages/Expenses";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
-import Settings from "@/pages/Settings";
-import Layout from "@/components/Layout";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ModernLayout from "@/components/ModernLayout";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -37,19 +31,14 @@ function Router() {
         <Route path="/" component={Login} />
       ) : (
         <Route path="/" nest>
-          <Layout>
+          <ModernLayout>
             <Switch>
-              <Route path="/" component={Dashboard} />
-              <ProtectedRoute path="/products" component={Products} />
-              <ProtectedRoute path="/customers" component={Customers} />
-              <ProtectedRoute path="/sales" component={Sales} />
-              <ProtectedRoute path="/expenses" component={Expenses} />
-              <ProtectedRoute path="/analytics" component={Analytics} />
-              <ProtectedRoute path="/reports" component={Reports} />
-              <ProtectedRoute path="/settings" component={Settings} />
+              <Route path="/" component={SuperAdminDashboard} />
+              <Route path="/analytics" component={Analytics} />
+              <Route path="/reports" component={Reports} />
               <Route component={NotFound} />
             </Switch>
-          </Layout>
+          </ModernLayout>
         </Route>
       )}
       <Route component={NotFound} />
