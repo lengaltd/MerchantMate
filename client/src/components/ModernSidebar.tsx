@@ -54,48 +54,68 @@ export default function ModernSidebar({ onLogout }: SidebarProps) {
   ];
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-full flex flex-col">
+    <div className="w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 h-full flex flex-col relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent"></div>
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-400/10 to-transparent rounded-full"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-transparent rounded-full"></div>
+      
       {/* Logo and Header */}
-      <div className="p-6 border-b border-gray-100">
+      <div className="p-6 border-b border-slate-700/50 relative z-10">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
             <LayoutDashboard className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900">POS System</h1>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              POS System
+            </h1>
+            <p className="text-xs text-slate-400">Admin Console</p>
           </div>
         </div>
       </div>
 
       {/* User Info */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="text-sm text-gray-500 mb-1">Welcome back</div>
-        <div className="font-semibold text-gray-900">{(user as any)?.fullName || "Super Admin"}</div>
-        <Badge variant="secondary" className="mt-2 text-xs">
-          {(user as any)?.role || "Super Admin"}
-        </Badge>
+      <div className="p-6 border-b border-slate-700/50 relative z-10">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-lg">
+              {((user as any)?.fullName || "Super Admin").charAt(0)}
+            </span>
+          </div>
+          <div>
+            <div className="text-sm text-slate-400 mb-1">Welcome back</div>
+            <div className="font-semibold text-white">{(user as any)?.fullName || "Super Admin"}</div>
+            <Badge className="mt-2 text-xs bg-gradient-to-r from-blue-600 to-purple-600 border-0 text-white">
+              {(user as any)?.role || "Super Admin"}
+            </Badge>
+          </div>
+        </div>
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 p-4">
-        <div className="space-y-2">
+      <nav className="flex-1 p-6 relative z-10">
+        <div className="space-y-3">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.path} href={item.path}>
                 <Button
-                  variant={item.active ? "default" : "ghost"}
-                  className={`w-full justify-start text-left ${
+                  variant="ghost"
+                  className={`w-full justify-start text-left group relative overflow-hidden border-0 ${
                     item.active 
-                      ? "bg-blue-600 text-white hover:bg-blue-700" 
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                  size="sm"
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg" 
+                      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+                  } transition-all duration-300`}
+                  size="lg"
                 >
-                  <Icon className="w-4 h-4 mr-3" />
-                  {item.label}
                   {item.active && (
-                    <ChevronRight className="w-4 h-4 ml-auto" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 animate-pulse"></div>
+                  )}
+                  <Icon className="w-5 h-5 mr-4 relative z-10" />
+                  <span className="relative z-10 font-medium">{item.label}</span>
+                  {item.active && (
+                    <ChevronRight className="w-4 h-4 ml-auto relative z-10" />
                   )}
                 </Button>
               </Link>
@@ -105,15 +125,15 @@ export default function ModernSidebar({ onLogout }: SidebarProps) {
       </nav>
 
       {/* Logout Button */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-6 border-t border-slate-700/50 relative z-10">
         <Button
           variant="ghost"
           onClick={onLogout}
-          className="w-full justify-start text-gray-700 hover:bg-gray-100"
-          size="sm"
+          className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700/50 border-0 transition-all duration-300 group"
+          size="lg"
         >
-          <LogOut className="w-4 h-4 mr-3" />
-          Sign Out
+          <LogOut className="w-5 h-5 mr-4 group-hover:text-red-400 transition-colors duration-300" />
+          <span className="font-medium">Sign Out</span>
         </Button>
       </div>
     </div>
