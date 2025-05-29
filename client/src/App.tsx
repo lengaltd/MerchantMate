@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Login from "@/pages/Login";
 import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+import StaffManagement from "@/pages/StaffManagement";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import ModernLayout from "@/components/ModernLayout";

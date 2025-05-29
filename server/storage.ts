@@ -35,6 +35,9 @@ export interface IStorage {
   getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined>;
   createUser(userData: Omit<UpsertUser, 'id'>): Promise<User>;
   initializeSuperAdmin(): Promise<User>;
+  getUsersByRole(role: string): Promise<User[]>;
+  getAllUsers(): Promise<User[]>;
+  deleteUser(id: string): Promise<void>;
 
   // Business operations
   createBusiness(business: InsertBusiness): Promise<Business>;
@@ -113,6 +116,27 @@ export class DatabaseStorage implements IStorage {
       .values(userData)
       .returning();
     return user;
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.role, role))
+      .orderBy(desc(users.createdAt));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.createdAt));
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db
+      .delete(users)
+      .where(eq(users.id, id));
   }
 
   async initializeSuperAdmin(): Promise<User> {

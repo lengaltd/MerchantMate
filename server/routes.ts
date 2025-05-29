@@ -124,6 +124,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User management routes
+  app.get('/api/users', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Only Super Admin can view all users
+      if (currentUser.role !== userRoles.SUPER_ADMIN) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { role } = req.query;
+      let users;
+      
+      if (role === 'APP_STAFF') {
+        users = await storage.getUsersByRole(userRoles.APP_STAFF);
+      } else {
+        users = await storage.getAllUsers();
+      }
+
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   app.post('/api/users', isAuthenticated, async (req: any, res) => {
     try {
       const currentUser = await storage.getUser(req.session.userId);
@@ -151,13 +179,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         ...userData,
         id: 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-        createdById: currentUser.id,
       });
 
       res.json(user);
     } catch (error) {
       console.error("Error creating user:", error);
       res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.delete('/api/users/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Only Super Admin can delete users
+      if (currentUser.role !== userRoles.SUPER_ADMIN) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { id } = req.params;
+      
+      // Prevent deleting self
+      if (id === currentUser.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+
+      await storage.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
     }
   });
 
