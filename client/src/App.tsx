@@ -5,9 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Login from "@/pages/Login";
-import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
-import StaffManagement from "@/pages/StaffManagement";
-import SponsorsManagement from "@/pages/SponsorsManagement";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import SponsorsManagement from "./pages/SponsorsManagement";
+import StaffManagement from "./pages/StaffManagement";
+import AppStaffDashboard from "./pages/AppStaffDashboard";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import Landing from "@/pages/Landing";
@@ -36,9 +37,10 @@ function Router() {
         <Route path="/" nest>
           <ModernLayout>
             <Switch>
-              <Route path="/" component={SuperAdminDashboard} />
-              <Route path="/staff" component={StaffManagement} />
+              <Route path="/super-admin" component={SuperAdminDashboard} />
               <Route path="/sponsors" component={SponsorsManagement} />
+              <Route path="/staff" component={StaffManagement} />
+              <Route path="/app-staff" component={AppStaffDashboard} />
               <Route path="/analytics" component={Analytics} />
               <Route path="/reports" component={Reports} />
               <Route component={NotFound} />

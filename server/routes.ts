@@ -131,8 +131,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Only Super Admin can view all users
-      if (currentUser.role !== userRoles.SUPER_ADMIN) {
+      // Super Admin and APP Staff can view users
+      if (![userRoles.SUPER_ADMIN, userRoles.APP_STAFF].includes(currentUser.role)) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 
@@ -143,6 +143,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         users = await storage.getUsersByRole(userRoles.APP_STAFF);
       } else if (role === 'SPONSOR') {
         users = await storage.getUsersByRole(userRoles.SPONSOR);
+      } else if (role === 'MERCHANT') {
+        users = await storage.getUsersByRole(userRoles.MERCHANT);
       } else {
         users = await storage.getAllUsers();
       }
@@ -523,6 +525,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating category:", error);
       res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  // APP Staff routes
+  app.get('/api/app-staff/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (currentUser.role !== userRoles.APP_STAFF) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const merchants = await storage.getUsersByRole(userRoles.MERCHANT);
+      const activeMerchants = merchants.filter(m => m.status === 'active');
+      const inactiveMerchants = merchants.filter(m => m.status !== 'active');
+
+      // Get all businesses and sales for analytics
+      const allBusinesses = await storage.getAllBusinesses();
+      const totalSales = await storage.getTotalSalesAllBusinesses();
+      const monthlyGrowth = await storage.getMonthlyGrowthAllBusinesses();
+
+      res.json({
+        totalMerchants: merchants.length,
+        activeMerchants: activeMerchants.length,
+        inactiveMerchants: inactiveMerchants.length,
+        totalBusinesses: allBusinesses.length,
+        totalSales,
+        monthlyGrowth,
+      });
+    } catch (error) {
+      console.error("Error fetching APP staff stats:", error);
+      res.status(500).json({ message: "Failed to fetch APP staff stats" });
+    }
+  });
+
+  app.put('/api/merchants/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (currentUser.role !== userRoles.APP_STAFF) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!['active', 'inactive', 'suspended'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const updatedUser = await storage.updateUserStatus(id, status);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating merchant status:", error);
+      res.status(500).json({ message: "Failed to update merchant status" });
+    }
+  });
+
+  app.get('/api/app-staff/merchants', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (currentUser.role !== userRoles.APP_STAFF) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const merchants = await storage.getUsersByRole(userRoles.MERCHANT);
+      const merchantsWithBusinesses = await Promise.all(
+        merchants.map(async (merchant) => {
+          const business = await storage.getUserBusiness(merchant.id);
+          return { ...merchant, business };
+        })
+      );
+
+      res.json(merchantsWithBusinesses);
+    } catch (error) {
+      console.error("Error fetching merchants:", error);
+      res.status(500).json({ message: "Failed to fetch merchants" });
+    }
+  });
+
+  app.get('/api/app-staff/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (currentUser.role !== userRoles.APP_STAFF) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const analytics = await storage.getSystemAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
 

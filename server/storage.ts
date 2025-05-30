@@ -81,6 +81,13 @@ export interface IStorage {
     newCustomers: number;
     productsSold: number;
   }>;
+  
+  // APP Staff operations
+  updateUserStatus(userId: string, status: string): Promise<User>;
+  getAllBusinesses(): Promise<Business[]>;
+  getTotalSalesAllBusinesses(): Promise<number>;
+  getMonthlyGrowthAllBusinesses(): Promise<number>;
+  getSystemAnalytics(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -468,6 +475,94 @@ export class DatabaseStorage implements IStorage {
       todayTransactions: todayStats.transactionCount,
       newCustomers: newCustomersResult[0]?.count || 0,
       productsSold: productsSoldResult[0]?.count || 0,
+    };
+  }
+
+  // APP Staff operations
+  async updateUserStatus(userId: string, status: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async getAllBusinesses(): Promise<Business[]> {
+    return await db
+      .select()
+      .from(businesses)
+      .orderBy(desc(businesses.createdAt));
+  }
+
+  async getTotalSalesAllBusinesses(): Promise<number> {
+    const result = await db
+      .select({
+        total: sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
+      })
+      .from(sales);
+
+    return result[0]?.total || 0;
+  }
+
+  async getMonthlyGrowthAllBusinesses(): Promise<number> {
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+
+    const thisMonthSales = await db
+      .select({
+        total: sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
+      })
+      .from(sales)
+      .where(gte(sales.createdAt, thisMonth));
+
+    const lastMonthSales = await db
+      .select({
+        total: sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
+      })
+      .from(sales)
+      .where(
+        and(
+          gte(sales.createdAt, lastMonth),
+          lte(sales.createdAt, thisMonth)
+        )
+      );
+
+    const thisMonthTotal = thisMonthSales[0]?.total || 0;
+    const lastMonthTotal = lastMonthSales[0]?.total || 0;
+
+    if (lastMonthTotal === 0) return 0;
+    return ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
+  }
+
+  async getSystemAnalytics(): Promise<any> {
+    const totalUsers = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(users);
+
+    const totalBusinesses = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(businesses);
+
+    const totalSales = await db
+      .select({
+        total: sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(sales);
+
+    const totalProducts = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(products);
+
+    return {
+      totalUsers: totalUsers[0]?.count || 0,
+      totalBusinesses: totalBusinesses[0]?.count || 0,
+      totalSalesAmount: totalSales[0]?.total || 0,
+      totalSalesCount: totalSales[0]?.count || 0,
+      totalProducts: totalProducts[0]?.count || 0,
     };
   }
 }

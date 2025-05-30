@@ -13,7 +13,8 @@ import {
   LogOut,
   User,
   Crown,
-  Shield
+  Shield,
+  Building2
 } from "lucide-react";
 
 interface NavigationDrawerProps {
@@ -111,6 +112,42 @@ export default function NavigationDrawer({ isOpen, onClose }: NavigationDrawerPr
     },
   ];
 
+  const superAdminItems: MenuItem[] = [
+    {
+      path: "/super-admin",
+      label: "Super Admin Dashboard",
+      icon: <Shield className="h-5 w-5" />,
+    },
+    {
+      path: "/staff",
+      label: "Staff Management",
+      icon: <Users className="h-5 w-5" />,
+    },
+    {
+      path: "/sponsors",
+      label: "Sponsors Management",
+      icon: <Building2 className="h-5 w-5" />,
+    },
+  ];
+
+  const appStaffItems: MenuItem[] = [
+    {
+      path: "/app-staff",
+      label: "APP Staff Dashboard",
+      icon: <Shield className="h-5 w-5" />,
+    },
+    {
+      path: "/analytics",
+      label: "Analytics",
+      icon: <BarChart3 className="h-5 w-5" />,
+    },
+    {
+      path: "/reports",
+      label: "Reports",
+      icon: <FileText className="h-5 w-5" />,
+    },
+  ];
+
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.roles) return true;
     return user?.role && item.roles.includes(user.role);
@@ -118,6 +155,16 @@ export default function NavigationDrawer({ isOpen, onClose }: NavigationDrawerPr
 
   const handleLogout = () => {
     window.location.href = '/api/logout';
+  };
+
+  const getMenuItems = () => {
+    if (user?.role === 'super_admin') {
+      return [...filteredMenuItems, ...superAdminItems];
+    }
+    if (user?.role === 'app_staff') {
+      return [...filteredMenuItems, ...appStaffItems];
+    }
+    return filteredMenuItems;
   };
 
   if (!user) return null;
@@ -162,7 +209,7 @@ export default function NavigationDrawer({ isOpen, onClose }: NavigationDrawerPr
       {/* Navigation Menu */}
       <nav className="flex-1 p-4">
         <div className="space-y-2">
-          {filteredMenuItems.map((item) => {
+          {getMenuItems().map((item) => {
             const isActive = location === item.path;
             return (
               <Link key={item.path} href={item.path}>
