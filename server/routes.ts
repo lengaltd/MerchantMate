@@ -141,6 +141,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (role === 'APP_STAFF') {
         users = await storage.getUsersByRole(userRoles.APP_STAFF);
+      } else if (role === 'SPONSOR') {
+        users = await storage.getUsersByRole(userRoles.SPONSOR);
       } else {
         users = await storage.getAllUsers();
       }

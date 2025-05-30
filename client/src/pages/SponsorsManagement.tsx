@@ -65,6 +65,13 @@ export default function SponsorsManagement() {
   // Fetch Sponsors
   const { data: sponsors, isLoading } = useQuery<Sponsor[]>({
     queryKey: ["/api/users", "SPONSOR"],
+    queryFn: async () => {
+      const response = await fetch('/api/users?role=SPONSOR');
+      if (!response.ok) {
+        throw new Error('Failed to fetch sponsors');
+      }
+      return response.json();
+    },
     retry: false,
   });
 

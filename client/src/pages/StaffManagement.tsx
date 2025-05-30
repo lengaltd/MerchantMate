@@ -63,6 +63,13 @@ export default function StaffManagement() {
   // Fetch APP Staff
   const { data: appStaff, isLoading } = useQuery<AppStaff[]>({
     queryKey: ["/api/users", "APP_STAFF"],
+    queryFn: async () => {
+      const response = await fetch('/api/users?role=APP_STAFF');
+      if (!response.ok) {
+        throw new Error('Failed to fetch app staff');
+      }
+      return response.json();
+    },
     retry: false,
   });
 
