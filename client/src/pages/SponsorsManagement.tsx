@@ -176,16 +176,16 @@ export default function SponsorsManagement() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <div className="relative bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 text-white p-8 rounded-2xl mb-8 overflow-hidden shadow-2xl">
+      <div className="relative bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 text-white p-4 sm:p-6 lg:p-8 rounded-2xl mb-6 sm:mb-8 overflow-hidden shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 animate-pulse"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
         <div className="relative z-10 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">
               Sponsors Management
             </h1>
-            <p className="text-emerald-100 mt-2 text-lg">Manage your business sponsors and partnerships</p>
+            <p className="text-emerald-100 mt-2 text-sm sm:text-base lg:text-lg">Manage your business sponsors and partnerships</p>
           </div>
           <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
             <Star className="w-5 h-5" />

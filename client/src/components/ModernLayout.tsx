@@ -49,7 +49,7 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
     <div className="flex h-screen bg-gray-50">
       <ModernSidebar onLogout={handleLogout} />
       <main className="flex-1 overflow-auto">
-        <div className="p-6">
+        <div className="p-3 sm:p-4 lg:p-6">
           {children}
         </div>
       </main>
