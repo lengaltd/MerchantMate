@@ -9,6 +9,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import SponsorsManagement from "./pages/SponsorsManagement";
 import StaffManagement from "./pages/StaffManagement";
 import AppStaffDashboard from "./pages/AppStaffDashboard";
+import MerchantManagement from "./pages/MerchantManagement";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import Landing from "@/pages/Landing";
@@ -16,7 +17,7 @@ import ModernLayout from "@/components/ModernLayout";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -37,12 +38,23 @@ function Router() {
         <Route path="/" nest>
           <ModernLayout>
             <Switch>
-              <Route path="/super-admin" component={SuperAdminDashboard} />
-              <Route path="/sponsors" component={SponsorsManagement} />
-              <Route path="/staff" component={StaffManagement} />
-              <Route path="/app-staff" component={AppStaffDashboard} />
-              <Route path="/analytics" component={Analytics} />
-              <Route path="/reports" component={Reports} />
+              {user?.role === 'SUPER_ADMIN' && (
+                <>
+                  <Route path="/" component={SuperAdminDashboard} />
+                  <Route path="/staff" component={StaffManagement} />
+                  <Route path="/sponsors" component={SponsorsManagement} />
+                  <Route path="/analytics" component={Analytics} />
+                  <Route path="/reports" component={Reports} />
+                </>
+              )}
+              {user?.role === 'APP_STAFF' && (
+                <>
+                  <Route path="/" component={AppStaffDashboard} />
+                  <Route path="/merchants" component={MerchantManagement} />
+                  <Route path="/analytics" component={Analytics} />
+                  <Route path="/reports" component={Reports} />
+                </>
+              )}
               <Route component={NotFound} />
             </Switch>
           </ModernLayout>

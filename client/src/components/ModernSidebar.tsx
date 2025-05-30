@@ -20,38 +20,64 @@ export default function ModernSidebar({ onLogout }: SidebarProps) {
   const [location] = useLocation();
   const { user } = useAuth();
 
-  const menuItems = [
-    { 
-      path: "/", 
-      label: "Dashboard", 
-      icon: LayoutDashboard,
-      active: location === "/"
-    },
-    { 
-      path: "/staff", 
-      label: "APP Staff", 
-      icon: Users,
-      active: location === "/staff"
-    },
-    { 
-      path: "/sponsors", 
-      label: "Sponsors", 
-      icon: Building2,
-      active: location === "/sponsors"
-    },
-    { 
-      path: "/analytics", 
-      label: "Analytics", 
-      icon: BarChart3,
-      active: location === "/analytics"
-    },
-    { 
-      path: "/reports", 
-      label: "Reports", 
-      icon: FileText,
-      active: location === "/reports"
+  const getMenuItems = () => {
+    const baseItems = [
+      { 
+        path: "/", 
+        label: "Dashboard", 
+        icon: LayoutDashboard,
+        active: location === "/"
+      },
+      { 
+        path: "/analytics", 
+        label: "Analytics", 
+        icon: BarChart3,
+        active: location === "/analytics"
+      },
+      { 
+        path: "/reports", 
+        label: "Reports", 
+        icon: FileText,
+        active: location === "/reports"
+      }
+    ];
+
+    if (user?.role === 'SUPER_ADMIN') {
+      return [
+        ...baseItems.slice(0, 1), // Dashboard
+        { 
+          path: "/staff", 
+          label: "APP Staff", 
+          icon: Users,
+          active: location === "/staff"
+        },
+        { 
+          path: "/sponsors", 
+          label: "Sponsors", 
+          icon: Building2,
+          active: location === "/sponsors"
+        },
+        ...baseItems.slice(1) // Analytics and Reports
+      ];
     }
-  ];
+
+    if (user?.role === 'APP_STAFF') {
+      return [
+        ...baseItems.slice(0, 1), // Dashboard
+        { 
+          path: "/merchants", 
+          label: "Merchants", 
+          icon: Building2,
+          active: location === "/merchants"
+        },
+        ...baseItems.slice(1) // Analytics and Reports
+      ];
+    }
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <div className="w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 h-full flex flex-col relative overflow-hidden">

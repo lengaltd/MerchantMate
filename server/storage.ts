@@ -37,6 +37,7 @@ export interface IStorage {
   initializeSuperAdmin(): Promise<User>;
   getUsersByRole(role: string): Promise<User[]>;
   getAllUsers(): Promise<User[]>;
+  updateUserStatus(id: string, status: string): Promise<User>;
   deleteUser(id: string): Promise<void>;
 
   // Business operations

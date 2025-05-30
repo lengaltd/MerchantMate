@@ -1,35 +1,32 @@
-
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
+  BarChart3, 
   Users, 
   Building2, 
   TrendingUp, 
   DollarSign,
-  UserCheck,
-  UserX,
-  BarChart3,
-  Search,
-  Filter,
+  Activity,
   Shield,
-  Calendar,
-  Phone,
-  Mail
+  Eye,
+  Settings,
+  UserX,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  Star
 } from "lucide-react";
 
-interface AppStaffStats {
+interface DashboardStats {
   totalMerchants: number;
   activeMerchants: number;
   inactiveMerchants: number;
-  totalBusinesses: number;
-  totalSales: number;
-  monthlyGrowth: number;
+  totalSponsors: number;
+  recentActivity: number;
 }
 
 interface Merchant {
@@ -38,294 +35,261 @@ interface Merchant {
   phoneNumber: string;
   email?: string;
   status: string;
+  businessName?: string;
   createdAt: string;
-  business?: {
-    id: string;
-    name: string;
-    type: string;
-  };
+  lastLogin?: string;
+}
+
+interface ActivityItem {
+  id: string;
+  type: string;
+  description: string;
+  timestamp: string;
+  severity: 'info' | 'warning' | 'success' | 'error';
 }
 
 export default function AppStaffDashboard() {
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedTab, setSelectedTab] = useState("overview");
 
-  const { data: stats, isLoading: statsLoading } = useQuery<AppStaffStats>({
+  // Fetch dashboard stats
+  const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/app-staff/stats"],
+    retry: false,
   });
 
-  const { data: merchants, isLoading: merchantsLoading } = useQuery<Merchant[]>({
-    queryKey: ["/api/app-staff/merchants"],
+  // Fetch merchants
+  const { data: merchants } = useQuery<Merchant[]>({
+    queryKey: ["/api/users", "MERCHANT"],
+    retry: false,
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ merchantId, status }: { merchantId: string; status: string }) => {
-      const response = await fetch(`/api/merchants/${merchantId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update merchant status');
-      }
-      
-      return response.json();
-    },
-    onSuccess: (_, { status }) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/app-staff/merchants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/app-staff/stats"] });
-      toast({
-        title: "Status Updated",
-        description: `Merchant status updated to ${status}`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update merchant status",
-        variant: "destructive",
-      });
-    },
+  // Fetch recent activities
+  const { data: activities } = useQuery<ActivityItem[]>({
+    queryKey: ["/api/app-staff/activities"],
+    retry: false,
   });
 
-  const filteredMerchants = merchants?.filter(merchant => {
-    const matchesSearch = merchant.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         merchant.phoneNumber.includes(searchTerm) ||
-                         merchant.business?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || merchant.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }) || [];
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+  const mockStats: DashboardStats = {
+    totalMerchants: merchants?.length || 0,
+    activeMerchants: merchants?.filter(m => m.status === 'active').length || 0,
+    inactiveMerchants: merchants?.filter(m => m.status !== 'active').length || 0,
+    totalSponsors: 0,
+    recentActivity: activities?.length || 0
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case 'inactive':
-        return <Badge className="bg-gray-100 text-gray-800">Inactive</Badge>;
-      case 'suspended':
-        return <Badge className="bg-red-100 text-red-800">Suspended</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
+  const mockActivities: ActivityItem[] = [
+    {
+      id: "1",
+      type: "merchant_created",
+      description: "New merchant registration: TechShop Ltd",
+      timestamp: new Date().toISOString(),
+      severity: "success"
+    },
+    {
+      id: "2", 
+      type: "merchant_disabled",
+      description: "Merchant access disabled: QuickMart",
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      severity: "warning"
+    },
+    {
+      id: "3",
+      type: "system_alert",
+      description: "High transaction volume detected",
+      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      severity: "info"
     }
-  };
+  ];
 
-  if (statsLoading) {
-    return (
-      <div className="p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-64"></div>
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Header */}
+      <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white p-8 rounded-2xl mb-8 overflow-hidden shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              APP Staff Dashboard
+            </h1>
+            <p className="text-blue-100 mt-2 text-lg">Monitor and manage merchant operations</p>
+          </div>
+          <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+            <Shield className="w-5 h-5" />
+            <span className="text-sm font-medium">Staff Control Panel</span>
           </div>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="p-4 pb-20">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">APP Staff Dashboard</h1>
-        <p className="text-gray-600">Manage merchants and view system analytics</p>
-      </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="card-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Merchants</p>
-                <p className="text-2xl font-bold text-primary">
-                  {stats?.totalMerchants || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="relative overflow-hidden border-0 bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10"></div>
+          <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Total Merchants</CardTitle>
+            <Building2 className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="text-2xl font-bold text-slate-800">{mockStats.totalMerchants}</div>
+            <p className="text-xs text-slate-500">Registered businesses</p>
           </CardContent>
         </Card>
 
-        <Card className="card-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Merchants</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats?.activeMerchants || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <UserCheck className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
+        <Card className="relative overflow-hidden border-0 bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10"></div>
+          <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Active Merchants</CardTitle>
+            <CheckCircle className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="text-2xl font-bold text-slate-800">{mockStats.activeMerchants}</div>
+            <p className="text-xs text-slate-500">Currently operational</p>
           </CardContent>
         </Card>
 
-        <Card className="card-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Sales</p>
-                <p className="text-2xl font-bold text-secondary">
-                  {formatCurrency(stats?.totalSales || 0)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-secondary" />
-              </div>
-            </div>
+        <Card className="relative overflow-hidden border-0 bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10"></div>
+          <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Inactive Merchants</CardTitle>
+            <UserX className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="text-2xl font-bold text-slate-800">{mockStats.inactiveMerchants}</div>
+            <p className="text-xs text-slate-500">Require attention</p>
           </CardContent>
         </Card>
 
-        <Card className="card-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Monthly Growth</p>
-                <p className="text-2xl font-bold text-accent">
-                  {stats?.monthlyGrowth?.toFixed(1) || 0}%
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-accent" />
-              </div>
-            </div>
+        <Card className="relative overflow-hidden border-0 bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+          <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Recent Activity</CardTitle>
+            <Activity className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="text-2xl font-bold text-slate-800">{mockStats.recentActivity}</div>
+            <p className="text-xs text-slate-500">Last 24 hours</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Search and Filter */}
-      <Card className="card-shadow mb-6">
-        <CardContent className="p-4">
-          <div className="flex space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search merchants..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Main Content */}
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="merchants">Merchants</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+        </TabsList>
 
-      {/* Merchants List */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-on-surface">Merchant Management</h2>
-        {merchantsLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded animate-pulse"></div>
-            ))}
-          </div>
-        ) : filteredMerchants.length > 0 ? (
-          filteredMerchants.map((merchant) => (
-            <Card key={merchant.id} className="card-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-medium text-on-surface">{merchant.fullName}</h3>
-                      {getStatusBadge(merchant.status)}
-                    </div>
-                    
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div className="flex items-center space-x-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{merchant.phoneNumber}</span>
-                      </div>
-                      {merchant.email && (
-                        <div className="flex items-center space-x-2">
-                          <Mail className="h-4 w-4" />
-                          <span>{merchant.email}</span>
-                        </div>
-                      )}
-                      {merchant.business && (
-                        <div className="flex items-center space-x-2">
-                          <Building2 className="h-4 w-4" />
-                          <span>{merchant.business.name} ({merchant.business.type})</span>
-                        </div>
-                      )}
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>Joined {new Date(merchant.createdAt).toLocaleDateString()}</span>
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Activity */}
+            <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  <span>Recent Activity</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {mockActivities.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg bg-slate-50">
+                      <div className={`w-2 h-2 rounded-full mt-2 ${
+                        activity.severity === 'success' ? 'bg-green-500' :
+                        activity.severity === 'warning' ? 'bg-orange-500' :
+                        activity.severity === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                      }`}></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-800">{activity.description}</p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    {merchant.status === 'active' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateStatusMutation.mutate({
-                          merchantId: merchant.id,
-                          status: 'suspended'
-                        })}
-                        disabled={updateStatusMutation.isPending}
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <UserX className="h-4 w-4 mr-1" />
-                        Suspend
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateStatusMutation.mutate({
-                          merchantId: merchant.id,
-                          status: 'active'
-                        })}
-                        disabled={updateStatusMutation.isPending}
-                        className="text-green-600 border-green-200 hover:bg-green-50"
-                      >
-                        <UserCheck className="h-4 w-4 mr-1" />
-                        Activate
-                      </Button>
-                    )}
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          ))
-        ) : (
-          <Card className="card-shadow">
-            <CardContent className="p-8 text-center text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No merchants found</p>
+
+            {/* Quick Actions */}
+            <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings className="w-5 h-5 text-purple-600" />
+                  <span>Quick Actions</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button className="h-20 flex-col bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                    <Users className="w-6 h-6 mb-2" />
+                    <span className="text-sm">Manage Merchants</span>
+                  </Button>
+                  <Button className="h-20 flex-col bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+                    <BarChart3 className="w-6 h-6 mb-2" />
+                    <span className="text-sm">View Analytics</span>
+                  </Button>
+                  <Button className="h-20 flex-col bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                    <Eye className="w-6 h-6 mb-2" />
+                    <span className="text-sm">Generate Reports</span>
+                  </Button>
+                  <Button className="h-20 flex-col bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700">
+                    <AlertTriangle className="w-6 h-6 mb-2" />
+                    <span className="text-sm">System Alerts</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="merchants">
+          <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl">
+            <CardHeader>
+              <CardTitle>Merchant Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <Building2 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-600 mb-2">Merchant Management</h3>
+                <p className="text-slate-500">Detailed merchant management features will be implemented here</p>
+              </div>
             </CardContent>
           </Card>
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl">
+            <CardHeader>
+              <CardTitle>Analytics & Insights</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <BarChart3 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-600 mb-2">Advanced Analytics</h3>
+                <p className="text-slate-500">Comprehensive analytics and reporting dashboard</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl">
+            <CardHeader>
+              <CardTitle>Reports & Documentation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <Eye className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-600 mb-2">System Reports</h3>
+                <p className="text-slate-500">Generate and view comprehensive system reports</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

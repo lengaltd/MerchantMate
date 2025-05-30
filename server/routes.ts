@@ -198,6 +198,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user status (for APP Staff to manage merchants)
+  app.patch('/api/users/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Super Admin and APP Staff can update user status
+      if (currentUser.role !== userRoles.SUPER_ADMIN && currentUser.role !== userRoles.APP_STAFF) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!status || !['active', 'inactive', 'suspended'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const targetUser = await storage.getUser(id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // APP Staff can only manage merchants
+      if (currentUser.role === userRoles.APP_STAFF && targetUser.role !== userRoles.MERCHANT) {
+        return res.status(403).json({ message: "Can only manage merchants" });
+      }
+
+      const updatedUser = await storage.updateUserStatus(id, status);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ message: "Failed to update user status" });
+    }
+  });
+
   app.delete('/api/users/:id', isAuthenticated, async (req: any, res) => {
     try {
       const currentUser = await storage.getUser(req.session.userId);
@@ -222,6 +260,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // APP Staff specific routes
+  app.get('/api/app-staff/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser || currentUser.role !== userRoles.APP_STAFF) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const merchants = await storage.getUsersByRole(userRoles.MERCHANT);
+      const sponsors = await storage.getUsersByRole(userRoles.SPONSOR);
+      
+      const stats = {
+        totalMerchants: merchants.length,
+        activeMerchants: merchants.filter(m => m.status === 'active').length,
+        inactiveMerchants: merchants.filter(m => m.status !== 'active').length,
+        totalSponsors: sponsors.length,
+        recentActivity: 3 // This would be calculated from actual activity logs
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching APP Staff stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  app.get('/api/app-staff/activities', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser || currentUser.role !== userRoles.APP_STAFF) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Mock activities for now - would be replaced with actual activity tracking
+      const activities = [
+        {
+          id: "1",
+          type: "merchant_created",
+          description: "New merchant registration: TechShop Ltd",
+          timestamp: new Date().toISOString(),
+          severity: "success"
+        },
+        {
+          id: "2", 
+          type: "merchant_disabled",
+          description: "Merchant access disabled: QuickMart",
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          severity: "warning"
+        },
+        {
+          id: "3",
+          type: "system_alert",
+          description: "High transaction volume detected",
+          timestamp: new Date(Date.now() - 7200000).toISOString(),
+          severity: "info"
+        }
+      ];
+
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching APP Staff activities:", error);
+      res.status(500).json({ message: "Failed to fetch activities" });
     }
   });
 
