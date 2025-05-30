@@ -228,7 +228,7 @@ export default function SuperAdminDashboard() {
                   <p className="text-xs text-slate-500 mt-1">2 hours ago</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 hover:shadow-md transition-all duration-300">
                 <div className="relative">
                   <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
@@ -240,7 +240,7 @@ export default function SuperAdminDashboard() {
                   <p className="text-xs text-slate-500 mt-1">6 hours ago</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-100 hover:shadow-md transition-all duration-300">
                 <div className="relative">
                   <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-violet-500 rounded-full"></div>
